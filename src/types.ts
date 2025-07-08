@@ -15,7 +15,7 @@ export type ValidationTargetType = 'query' | 'request' | 'response';
 
 export type ParamArrayFormat = 'indices' | 'brackets' | 'repeat' | 'comma';
 export type ParamDateSerializer = (date: Date) => string;
-export type CreateClientConfig = {
+export type ApiClientConfig = {
     baseURL: string;
     headers?: Record<string, string>;
     mode?: RequestMode;
@@ -73,8 +73,6 @@ export type ValidationErrorParams = ApiErrorParams & {
     validation_error_message: string;
 }
 
-export type ApiClient<C extends CreateClientConfig> = <T extends ApiRequestParams<any, any, any>>(params: T) => Promise<InferApiResponse<C, T>>;
-
 //region Inference
 
 type _helperResponseTypeMapping = {
@@ -89,21 +87,21 @@ export type InferResponseType<T extends ResponseType> = T extends keyof _helperR
     ? _helperResponseTypeMapping[T]
     : unknown;
 
-type _helperInferResType<T extends CreateClientConfig|ApiRequestParams<any, any, any>> =
+type _helperInferResType<T extends ApiClientConfig|ApiRequestParams<any, any, any>> =
     'responseType' extends keyof T
         ? T['responseType'] extends ResponseType
             ? T['responseType']
             : undefined
         : undefined;
 
-type _helperInferResponseType<C extends CreateClientConfig, T extends ApiRequestParams<any, any, any>> =
+type _helperInferResponseType<C extends ApiClientConfig, T extends ApiRequestParams<any, any, any>> =
     _helperInferResType<T> extends undefined
         ? _helperInferResType<C> extends undefined
             ? undefined
             : _helperInferResType<C>
         : _helperInferResType<T>;
 
-export type InferApiResponse<C extends CreateClientConfig, T extends ApiRequestParams<any, any, any>> =
+export type InferApiResponse<C extends ApiClientConfig, T extends ApiRequestParams<any, any, any>> =
     _helperInferResponseType<C, T> extends 'raw'
         ? Response
         : '$output' extends keyof T

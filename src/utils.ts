@@ -1,5 +1,6 @@
 import * as QueryString from 'qs';
-import {AppendQueryStringOptions} from './types';
+import {AppendQueryStringOptions, ApiClientConfig} from './types';
+import {ApiClient} from './client';
 
 /**
  * @param {AppendQueryStringOptions} options
@@ -37,4 +38,13 @@ export function getAbsoluteRequestURL(baseURL: string, path_and_rest: string): s
     return (baseURL.replace(/\/+$/, '')
         + '/' + path_and_rest.replace(/^\/+/, '')
     ).replaceAll(/\/{2,}/g, '/');
+}
+
+/**
+ * @template {ApiClientConfig} C
+ * @param {C} config
+ * @returns {ApiClient<C>}
+ */
+export function createClient<C extends ApiClientConfig>(config: C): ApiClient<C>{
+    return new ApiClient<C>(config);
 }

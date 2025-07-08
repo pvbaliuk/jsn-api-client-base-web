@@ -1,46 +1,31 @@
-import {z} from 'zod/v4';
-import {
-    ApiClient, ApiRequestParams, CreateClientConfig, InferApiResponse, InferResponseType, ResponseType
-} from './types';
+import {ApiRequestParams, ApiClientConfig, InferApiResponse, InferResponseType, ResponseType} from './types';
 import {appendQueryString, getAbsoluteRequestURL} from './utils';
 import {ConnectionError, HttpError, UnexpectedError, ValidationError} from './errors';
+import {z} from 'zod/v4/index';
 
-export function createClient<C extends CreateClientConfig>(config: C): ApiClient<C>{
-    //region Utils
+/**
+ * @template {ApiClientConfig} C
+ */
+export class ApiClient<C extends ApiClientConfig>{
 
-    const appendQs = (path: string, query?: any) => appendQueryString({
-        path: path,
-        query: query,
-        qsArrayFormat: config.qsArrayFormat,
-        qsDateSerializer: config.qsDateSerializer
-    });
+    protected readonly config: C;
 
-    const getAbsURL = getAbsoluteRequestURL.bind(null, config.baseURL) as (path_n_rest: string) => string;
-
-    const provideAuthorization = (params: ApiRequestParams<any, any, any>) => {
-        if(!config.authorizationProvider || typeof config.authorizationProvider !== 'function')
-            return;
-
-        return config.authorizationProvider(params);
-    };
-
-    const getResponseData = <T extends ResponseType>(response: Response, responseType: ResponseType): Promise<InferResponseType<T>> => {
-        switch(responseType){
-            case 'raw': return Promise.resolve(undefined) as Promise<InferResponseType<T>>;
-            case 'text': return response.text() as Promise<InferResponseType<T>>;
-            case 'json': return response.json() as Promise<InferResponseType<T>>;
-            case 'blob': return response.blob() as Promise<InferResponseType<T>>;
-            case 'arraybuffer': return response.arrayBuffer() as Promise<InferResponseType<T>>;
-            default: return Promise.reject(new Error(`Unsupported response type: ${responseType}`));
-        }
+    /**
+     * @param {C} config
+     */
+    public constructor(config: C) {
+        this.config = config;
     }
 
-    //endregion
-
-    return async function<T extends ApiRequestParams<any, any, any>>(params: T): Promise<InferApiResponse<C, T>>{
-        const responseType = config.responseType ?? params.responseType ?? 'raw',
-            previewEndpointURI = appendQs(params.path, params.query),
-            previewRequestURL = getAbsURL(previewEndpointURI);
+    /**
+     * @template {ApiRequestParams<any, any, any>} T
+     * @param {T} params
+     * @returns {Promise<InferApiResponse<C, T>>}
+     */
+    public async send<T extends ApiRequestParams<any, any, any>>(params: T): Promise<InferApiResponse<C, T>>{
+        const responseType = this.config.responseType ?? params.responseType ?? 'raw',
+            previewEndpointURI = this.appendQs(params.path, params.query),
+            previewRequestURL = this.getAbsURL(previewEndpointURI);
 
         let response: Response|undefined = undefined;
 
@@ -59,10 +44,10 @@ export function createClient<C extends CreateClientConfig>(config: C): ApiClient
         }
 
         // Provide auth
-        await provideAuthorization(params);
+        await this.provideAuthorization(params);
 
-        const endpointURI = appendQs(params.path, params.query),
-            requestURL = getAbsURL(endpointURI);
+        const endpointURI = this.appendQs(params.path, params.query),
+            requestURL = this.getAbsURL(endpointURI);
 
         // Validate request body
         if(!!params.$input){
@@ -80,7 +65,7 @@ export function createClient<C extends CreateClientConfig>(config: C): ApiClient
 
         // Join headers
         const headers: Record<string, string> = {};
-        for(const [k, v] of Object.entries(config?.headers ?? {}))
+        for(const [k, v] of Object.entries(this.config?.headers ?? {}))
             headers[k.toLowerCase()] = v;
 
         for(const [k, v] of Object.entries(params?.headers ?? {}))
@@ -90,8 +75,8 @@ export function createClient<C extends CreateClientConfig>(config: C): ApiClient
         try{
             response = await fetch(requestURL, {
                 method: params.method,
-                mode: params.mode ?? config.mode ?? 'cors',
-                credentials: params.credentials ?? config.credentials ?? 'include',
+                mode: params.mode ?? this.config.mode ?? 'cors',
+                credentials: params.credentials ?? this.config.credentials ?? 'include',
                 headers: headers,
                 body: params.data,
                 signal: params.signal
@@ -103,7 +88,7 @@ export function createClient<C extends CreateClientConfig>(config: C): ApiClient
             throw new UnexpectedError({method: params.method, url: requestURL, original: e});
         }
 
-        let responseData = getResponseData(response, responseType);
+        let responseData = this.getResponseData(response, responseType);
         if(!!params.$output){
             try{
                 responseData = params.$output.parse(responseData);
@@ -130,5 +115,59 @@ export function createClient<C extends CreateClientConfig>(config: C): ApiClient
             return response as InferApiResponse<C, T>;
 
         return responseData as InferApiResponse<C, T>;
-    };
+    }
+
+    /**
+     * @param {ApiRequestParams<any, any, any>} params
+     * @returns {void | Promise<void>}
+     */
+    protected provideAuthorization = (params: ApiRequestParams<any, any, any>): void|Promise<void> => {
+        if(!this.config.authorizationProvider || typeof this.config.authorizationProvider !== 'function')
+            return;
+
+        return this.config.authorizationProvider(params);
+    }
+
+    /**
+     * @param {string} path
+     * @param {*} [query]
+     * @returns {string}
+     * @private
+     */
+    private appendQs(path: string, query?: any): string {
+        return appendQueryString({
+            path: path,
+            query: query,
+            qsArrayFormat: this.config.qsArrayFormat ?? 'brackets',
+            qsDateSerializer: this.config.qsDateSerializer
+        });
+    }
+
+    /**
+     * @param {string} path_n_rest
+     * @returns {string}
+     * @private
+     */
+    private getAbsURL(path_n_rest: string): string {
+        return getAbsoluteRequestURL(this.config.baseURL, path_n_rest);
+    }
+
+    /**
+     * @template {ResponseType} T
+     * @param {Response} response
+     * @param {T} responseType
+     * @returns {Promise<InferResponseType<T>>}
+     * @private
+     */
+    private getResponseData<T extends ResponseType>(response: Response, responseType: T): Promise<InferResponseType<T>>{
+        switch(responseType){
+            case 'raw': return Promise.resolve(undefined) as Promise<InferResponseType<T>>;
+            case 'text': return response.text() as Promise<InferResponseType<T>>;
+            case 'json': return response.json() as Promise<InferResponseType<T>>;
+            case 'blob': return response.blob() as Promise<InferResponseType<T>>;
+            case 'arraybuffer': return response.arrayBuffer() as Promise<InferResponseType<T>>;
+            default: return Promise.reject(new Error(`Unsupported response type: ${responseType}`));
+        }
+    }
+
 }
