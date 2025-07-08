@@ -1,0 +1,48 @@
+{
+  "name": "jsn-api-client-base-web",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/cjs/index.js",
+      "import": "./dist/esm/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "rm -rf ./dist && concurrently 'tsc -p tsconfig.cjs.json' 'tsc -p tsconfig.esm.json'",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "./dist"
+  ],
+  "keywords": [],
+  "author": {
+    "name": "Pavlo Baliuk",
+    "email": "jsnow0177@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/pvbaliuk/jsn-api-client-base-web.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pvbaliuk/jsn-api-client-base-web/issues"
+  },
+  "homepage": "https://github.com/pvbaliuk/jsn-api-client-base-web#readme",
+  "license": "MIT",
+  "dependencies": {
+    "qs": "^6.14.0"
+  },
+  "devDependencies": {
+    "@types/qs": "^6.14.0",
+    "concurrently": "^9.2.0",
+    "typescript": "^5.8.3",
+    "zod": "^3.25.74"
+  },
+  "peerDependencies": {
+    "zod": "^3.25.74"
+  }
+}
