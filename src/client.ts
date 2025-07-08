@@ -88,12 +88,14 @@ export class ApiClient<C extends ApiClientConfig>{
             throw new UnexpectedError({method: params.method, url: requestURL, original: e});
         }
 
-        let responseData = this.getResponseData(response, responseType);
+        let responseData = this.getResponseData(response, responseType),
+            throwErr: Error|null = null;
+
         if(!!params.$output){
             try{
                 responseData = params.$output.parse(responseData);
             }catch(e){
-                throw new ValidationError({
+                throwErr = new ValidationError({
                     method: params.method,
                     url: requestURL,
                     target: 'response',
@@ -101,6 +103,9 @@ export class ApiClient<C extends ApiClientConfig>{
                 });
             }
         }
+
+        if(response.ok && throwErr)
+            throw throwErr;
 
         if(!response.ok)
             throw new HttpError({
