@@ -1,5 +1,7 @@
 import {
-    ApiErrorParams, HttpErrorParams, HttpMethod, UnexpectedErrorParams, ValidationErrorParams,
+    ApiErrorParams, HttpErrorParams, HttpMethod, ResponseType, UnexpectedErrorParams,
+    UnexpectedResponseFormatErrorParams,
+    ValidationErrorParams,
     ValidationTargetType
 } from './types';
 
@@ -64,6 +66,24 @@ export class HttpError extends ApiError{
         this.statusCode = params.statusCode;
         this.statusText = params.statusText;
         this.responseData = params.responseData;
+    }
+
+}
+
+export class UnexpectedResponseFormatError extends ApiError{
+
+    public readonly expected: ResponseType;
+    public readonly original?: Error;
+
+    /**
+     * @param {UnexpectedResponseFormatErrorParams} params
+     */
+    public constructor(params: UnexpectedResponseFormatErrorParams) {
+        super(params);
+
+        this.name = 'UnexpectedResponseFormatError';
+        this.expected = params.expected;
+        this.original = params.original;
     }
 
 }

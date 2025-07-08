@@ -68,6 +68,11 @@ export type HttpErrorParams = ApiErrorParams & {
     error_message?: string;
 }
 
+export type UnexpectedResponseFormatErrorParams = ApiErrorParams & {
+    expected: ResponseType;
+    original?: Error;
+};
+
 export type ValidationErrorParams = ApiErrorParams & {
     target: ValidationTargetType;
     validation_error_message: string;

@@ -1,6 +1,6 @@
 import {ApiRequestParams, ApiClientConfig, InferApiResponse, InferResponseType, ResponseType} from './types';
 import {appendQueryString, getAbsoluteRequestURL} from './utils';
-import {ConnectionError, HttpError, UnexpectedError, ValidationError} from './errors';
+import {ConnectionError, HttpError, UnexpectedError, UnexpectedResponseFormatError, ValidationError} from './errors';
 import {z} from 'zod/v4';
 
 /**
@@ -88,10 +88,21 @@ export class ApiClient<C extends ApiClientConfig>{
             throw new UnexpectedError({method: params.method, url: requestURL, original: e});
         }
 
-        let responseData = this.getResponseData(response, responseType),
+        let responseData: any|undefined = undefined,
             throwErr: Error|null = null;
 
-        if(!!params.$output){
+        try{
+            responseData = await this.getResponseData(response, responseType);
+        }catch(e){
+            throwErr = new UnexpectedResponseFormatError({
+                method: params.method,
+                url: requestURL,
+                expected: responseType,
+                original: e
+            });
+        }
+
+        if(!!params.$output && !throwErr){
             try{
                 responseData = params.$output.parse(responseData);
             }catch(e){
