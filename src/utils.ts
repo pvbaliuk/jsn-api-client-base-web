@@ -21,6 +21,9 @@ export function appendQueryString({path, query, qsArrayFormat, qsDateSerializer}
         serializeDate: qsDateSerializer
     });
 
+    if(path.endsWith('?'))
+        path = path.substring(0, path.length - 1);
+
     return path;
 }
 

@@ -15,6 +15,7 @@ export class ApiError extends Error{
     public constructor(params: ApiErrorParams, message?: string) {
         super(message);
 
+        this.name = 'ApiError';
         this.url = params.url;
         this.method = params.method;
     }
@@ -31,12 +32,21 @@ export class UnexpectedError extends ApiError{
     public constructor(params: UnexpectedErrorParams) {
         super(params);
 
+        this.name = 'UnexpectedError';
         this.original = params.original;
     }
 
 }
 
-export class ConnectionError extends ApiError{}
+export class ConnectionError extends ApiError{
+
+    public constructor(params: ApiErrorParams, message?: string) {
+        super(params, message);
+
+        this.name = 'ConnectionError';
+    }
+
+}
 
 export class HttpError extends ApiError{
 
@@ -50,6 +60,7 @@ export class HttpError extends ApiError{
     public constructor(params: HttpErrorParams) {
         super(params);
 
+        this.name = 'HttpError';
         this.statusCode = params.statusCode;
         this.statusText = params.statusText;
         this.responseData = params.responseData;
@@ -67,6 +78,7 @@ export class ValidationError extends ApiError{
     public constructor(params: ValidationErrorParams) {
         super(params, params.validation_error_message);
 
+        this.name = 'ValidationError';
         this.target = params.target;
     }
 
