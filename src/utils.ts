@@ -37,7 +37,7 @@ export function appendQueryString({path, query, qsArrayFormat, qsDateSerializer}
 export function getAbsoluteRequestURL(baseURL: string, path_and_rest: string): string{
     return (baseURL.replace(/\/+$/, '')
         + '/' + path_and_rest.replace(/^\/+/, '')
-    ).replaceAll(/\/{2,}/g, '/');
+    ).replaceAll(/[^:]\/{2,}/g, '/');
 }
 
 /**
