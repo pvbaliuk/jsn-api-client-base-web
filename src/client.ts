@@ -1,7 +1,7 @@
 import {ApiRequestParams, ApiClientConfig, InferApiResponse, InferResponseType, ResponseType} from './types';
 import {appendQueryString, getAbsoluteRequestURL} from './utils';
 import {ConnectionError, HttpError, UnexpectedError, ValidationError} from './errors';
-import {z} from 'zod/v4/index';
+import {z} from 'zod/v4';
 
 /**
  * @template {ApiClientConfig} C
