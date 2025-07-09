@@ -71,6 +71,21 @@ export class ApiClient<C extends ApiClientConfig>{
         for(const [k, v] of Object.entries(params?.headers ?? {}))
             headers[k.toLowerCase()] = v;
 
+        // Prepare request data
+        let requestData: any|undefined = undefined;
+        if(!(params.data instanceof Blob)
+            && !(params.data instanceof ArrayBuffer)
+            && !(params.data instanceof FormData)
+            && !(params.data instanceof URLSearchParams)
+            && !(params.data instanceof ReadableStream)
+        ){
+            if(typeof params.data === 'string' || typeof params.data === 'number' || typeof params.data === 'boolean' || typeof params.data === 'bigint'){
+                requestData = params.data.toString();
+            }else if(typeof params.data === 'object'){
+                requestData = JSON.stringify(params.data);
+            }
+        }
+
         // Make a request
         try{
             response = await fetch(requestURL, {
@@ -78,7 +93,7 @@ export class ApiClient<C extends ApiClientConfig>{
                 mode: params.mode ?? this.config.mode ?? 'cors',
                 credentials: params.credentials ?? this.config.credentials ?? 'include',
                 headers: headers,
-                body: params.data,
+                body: requestData,
                 signal: params.signal
             });
         }catch(e){
