@@ -1,6 +1,6 @@
 {
   "name": "jsn-api-client-base-web",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "main": "./dist/cjs/index.js",
   "module": "./dist/esm/index.js",
@@ -43,6 +43,6 @@
     "zod": "^4.0.5"
   },
   "peerDependencies": {
-    "zod": "^3.25.74"
+    "zod": "^4.0.5"
   }
 }
