@@ -23,7 +23,7 @@ export class ApiClient<C extends ApiClientConfig>{
      * @returns {Promise<InferApiResponse<C, T>>}
      */
     public async send<T extends ApiRequestParams<any, any, any>>(params: T): Promise<InferApiResponse<C, T>>{
-        const responseType = this.config.responseType ?? params.responseType ?? 'raw',
+        const responseType =  params.responseType ?? this.config.responseType ?? 'raw',
             previewEndpointURI = this.appendQs(params.path, params.query),
             previewRequestURL = this.getAbsURL(previewEndpointURI);
 
